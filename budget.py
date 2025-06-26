@@ -101,16 +101,12 @@ class Budget:
         if any(e.name == name for e in self.expenses):
             print("Expense already exists.")
             return
-
-        try:
-            amount = float(input("Enter amount: ").replace(',', '.'))
-            payments = int(input("Enter payments per year: "))
-            first_month = int(input("Enter first month (1-12): "))
-            naja = int(input("Enter Naja's share (%): "))
-            david = int(input("Enter David's share (%): "))
-        except ValueError:
-            print("Invalid input!")
-            return        
+        
+        amount = get_validated_float("Amount", 0)
+        payments = get_validated_int("Payments per year", 0)
+        first_month = get_validated_int("First month", 0)
+        naja = get_validated_int("Naja's share (%)", 0)
+        david = get_validated_int("David's share (%)", 0)
 
         expense = Expense(name, amount, payments, first_month, naja, david)
         self.expenses.append(expense)
