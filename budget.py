@@ -10,6 +10,25 @@ import os
 def clear_console():
     os.system('cls')
 
+def get_validated_float(prompt, current_value):
+    while True:
+        user_input = input(f"{prompt} [{current_value}]: ")
+        if user_input == "":
+            return current_value
+        try:
+            return float(user_input.replace(',', '.'))
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+
+def get_validated_int(prompt, current_value):
+    while True:
+        user_input = input(f"{prompt} [{current_value}]: ")
+        if user_input == "":
+            return current_value
+        if user_input.isdigit():
+            return int(user_input)
+        print("Invalid input. Please enter a whole number.")
+
 """# Expense class"""
 
 class Expense:
@@ -112,20 +131,21 @@ class Budget:
                 print(f"Editing '{e.name}' (press Enter to keep current value)")
 
                 new_name = input(f"New name [{e.name}]: ") or e.name
-                amount = float(input(f"New amount [{e.amount}]: ").replace(',', '.'))
-                payments = input(f"Payments per year [{e.payments_per_year}]: ")
-                first_month = input(f"First month [{e.first_month}]: ")
-                naja = input(f"Naja's share (%) [{round(e.naja_share / e.total_per_year * 100)}]: ")
-                david = input(f"David's share (%) [{round(e.david_share / e.total_per_year * 100)}]: ")
+                amount = get_validated_float("New amount", e.amount)
+                payments = get_validated_int("Payments per year", e.payments_per_year)
+                first_month = get_validated_int("First month", e.first_month)
+                naja = get_validated_int("Naja's share (%)", round(e.naja_share / e.total_per_year * 100))
+                david = get_validated_int("David's share (%)", round(e.david_share / e.total_per_year * 100))
 
                 e.update(
                     name=new_name,
-                    amount=amount if amount else None,
-                    payments_per_year=int(payments) if payments else None,
-                    first_month=int(first_month) if first_month else None,
-                    naja_share_pct=int(naja) if naja else None,
-                    david_share_pct=int(david) if david else None
+                    amount=amount,
+                    payments_per_year=payments,
+                    first_month=first_month,
+                    naja_share_pct=naja,
+                    david_share_pct=david
                 )
+
 
                 print("Expense updated.")
                 return
