@@ -32,14 +32,13 @@ def get_validated_int(prompt, current_value):
 """# Expense class"""
 
 class Expense:
-    def __init__(self, name, amount, payments_per_year, first_month, naja_share_pct, david_share_pct):
+    def __init__(self, name, amount, payments_per_year, first_month, shares):
         self.name = name
         self.amount = amount
         self.payments_per_year = payments_per_year
         self.first_month = first_month
         self.total_per_year = amount * payments_per_year
-        self.naja_share = naja_share_pct / 100 * self.total_per_year
-        self.david_share = david_share_pct / 100 * self.total_per_year
+        self.shares = shares  # e.g. {'Naja': 60, 'David': 40}
         self.payment_months = self.calculate_payment_months()
 
     def calculate_payment_months(self):
@@ -95,22 +94,71 @@ class Expense:
 class Budget:
     def __init__(self):
         self.expenses = []
+        self.people = self.get_participants()  # e.g. ['Naja', 'David']
+
+    def get_participants(self):
+        print("Enter the names of the people sharing expenses (e.g. Naja, David). Leave blank to finish.")
+        people = []
+        while True:
+            name = input("Enter name: ").strip()
+            if not name:
+                break
+            if name in people:
+                print("Name already added.")
+                continue
+            people.append(name)
+        if not people:
+            print("No names entered. Using default: ['Naja', 'David']")
+            return ['Naja', 'David']
+        return people
 
     def add_expense(self):
         name = input("Enter name of expense: ")
         if any(e.name == name for e in self.expenses):
             print("Expense already exists.")
             return
-        
+
         amount = get_validated_float("Amount", 0)
         payments = get_validated_int("Payments per year", 0)
         first_month = get_validated_int("First month", 0)
-        naja = get_validated_int("Naja's share (%)", 0)
-        david = get_validated_int("David's share (%)", 0)
 
-        expense = Expense(name, amount, payments, first_month, naja, david)
+        shares = {}
+        total = 0
+        print("Enter share percentages. Total must be 100%.")
+
+        for person in self.people:
+            while True:
+                try:
+                    share = int(input(f"{person}'s share (%): "))
+                    break
+                except ValueError:
+                    print("Invalid input. Enter a number.")
+            shares[person] = share
+            total += share
+
+        if total != 100:
+            print(f"Error: Total share is {total}%. Must be 100%.")
+            return
+
+        expense = Expense(name, amount, payments, first_month, shares)
         self.expenses.append(expense)
         print("Expense added.")
+
+##    def add_expense(self):
+##        name = input("Enter name of expense: ")
+##        if any(e.name == name for e in self.expenses):
+##            print("Expense already exists.")
+##            return
+##        
+##        amount = get_validated_float("Amount", 0)
+##        payments = get_validated_int("Payments per year", 0)
+##        first_month = get_validated_int("First month", 0)
+##        naja = get_validated_int("Naja's share (%)", 0)
+##        david = get_validated_int("David's share (%)", 0)
+##
+##        expense = Expense(name, amount, payments, first_month, naja, david)
+##        self.expenses.append(expense)
+##        print("Expense added.")
 
     def delete_expense(self, name):
         for e in self.expenses:
