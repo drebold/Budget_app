@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import time
 import os
+import pickle
 
 def clear_console():
     os.system('cls')
@@ -74,18 +75,6 @@ class Expense:
             self.shares = shares
         if any(v is not None for v in [payments_per_year, first_month]):
             self.payment_months = self.calculate_payment_months()
-
-    @classmethod
-    def from_dict(cls, data):
-        # Reconstruct using stored fields (recalculating shares to avoid rounding issues)
-        return cls(
-            name=data["name"],
-            amount=data["amount"],
-            payments_per_year=data["payments_per_year"],
-            first_month=data["first_month"],
-            naja_share_pct=(data["naja_share"] / data["total_per_year"] * 100),
-            david_share_pct=(data["david_share"] / data["total_per_year"] * 100),
-        )
 
 """# Budget class"""
 
@@ -220,21 +209,19 @@ class Budget:
         df = pd.DataFrame(filtered)
         print(df.to_string(index=False))
 
-    def save_to_json(self, filename):
-        with open(filename, "w") as f:
-            json.dump([e.to_dict() for e in self.expenses], f)
+    def save_to_pickle(self, filename):
+        with open(filename, "wb") as f:
+            pickle.dump(self.expenses, f)
         print("Expenses saved.")
 
-    def load_from_json(self, filename):
+    def load_from_pickle(self, filename):
         try:
-            with open(filename, "r") as f:
-                data = json.load(f)
-            self.expenses = [Expense.from_dict(e) for e in data]
+            with open(filename, "rb") as f:
+                data = pickle.load(f)
+            self.expenses = data
             print("Expenses loaded.")
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found.")
-        except json.JSONDecodeError:
-            print(f"Error: File '{filename}' is not a valid JSON file.")
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
@@ -245,7 +232,7 @@ import time
 
 def main():
     budget = Budget()
-    current_file = "expenses.json"
+    current_file = "expenses.pkl"
 
     while True:
         # Display menu (don't clear yet — avoid input race)
@@ -283,11 +270,11 @@ def main():
             budget.edit_expense()
         elif choice == '7':
             saveto = input(f"Filename: [{current_file}]") or current_file
-            budget.save_to_json(saveto)
+            budget.save_to_pickle(saveto)
         elif choice == '8':
             loadfrom = input(f"Filename: [{current_file}]") or current_file
             current_file = loadfrom
-            budget.load_from_json(loadfrom)
+            budget.load_from_pickle(loadfrom)
         elif choice == '9':
             print("Exiting...")
             break
