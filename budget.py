@@ -167,12 +167,7 @@ class Budget:
                 print("Enter share percentages. Total must be 100%.")
                 
                 for person in self.people:
-                    while True:
-                        try:
-                            share = int(input(f"{person}'s share (%): "))
-                            break
-                        except ValueError:
-                            print("Invalid input. Enter a number.")
+                    share = get_validated_int(person, e.shares[person])
                     shares[person] = share
                     total += share
 
