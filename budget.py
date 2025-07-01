@@ -46,16 +46,16 @@ class Expense:
         return [((self.first_month - 1) + i * interval) % 12 + 1 for i in range(self.payments_per_year)]
 
     def to_dict(self):
-        return {
+        temp_dict = {
             "name": self.name,
             "amount": self.amount,
             "payments_per_year": self.payments_per_year,
             "first_month": self.first_month,
-            "naja_share": self.naja_share,
-            "david_share": self.david_share,
             "payment_months": self.payment_months,
             "total_per_year": self.total_per_year
         }
+        temp_dict.update(self.shares)
+        return temp_dict
 
     def update(self, name=None, amount=None, payments_per_year=None,
                first_month=None, naja_share_pct=None, david_share_pct=None):
@@ -198,14 +198,12 @@ class Budget:
 
 
     def show_shares(self):
-        total_naja = sum(e.naja_share for e in self.expenses)
-        total_david = sum(e.david_share for e in self.expenses)
-
-        shares = {
-            "Naja": {"total": total_naja, "monthly": total_naja / 12},
-            "David": {"total": total_david, "monthly": total_david / 12}
-        }
-
+        shares ={}
+        
+        for person in self.people:
+            total = sum(e.shares[person] * e.total_per_year / 100 for e in self.expenses)
+            shares.update({person:{"total":total, "monthly":total / 12}})
+            
         df = pd.DataFrame(shares)
         print(df.to_string(index=True))
 
@@ -250,7 +248,6 @@ class Budget:
 
 """# Main function"""
 
-from IPython.display import clear_output
 import time
 
 def main():
