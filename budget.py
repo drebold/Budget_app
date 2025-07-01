@@ -58,7 +58,7 @@ class Expense:
         return temp_dict
 
     def update(self, name=None, amount=None, payments_per_year=None,
-               first_month=None, naja_share_pct=None, david_share_pct=None):
+               first_month=None, shares=None):
 
         if name is not None:
             self.name = name
@@ -70,10 +70,8 @@ class Expense:
             self.first_month = first_month
         if any(v is not None for v in [amount, payments_per_year]):
             self.total_per_year = self.amount * self.payments_per_year
-        if naja_share_pct is not None:
-            self.naja_share = naja_share_pct / 100 * self.total_per_year
-        if david_share_pct is not None:
-            self.david_share = david_share_pct / 100 * self.total_per_year
+        if shares is not None:
+            self.shares = shares
         if any(v is not None for v in [payments_per_year, first_month]):
             self.payment_months = self.calculate_payment_months()
 
@@ -110,6 +108,7 @@ class Budget:
         if not people:
             print("No names entered. Using default: ['Naja', 'David']")
             return ['Naja', 'David']
+        clear_console()
         return people
 
     def add_expense(self):
@@ -144,22 +143,6 @@ class Budget:
         self.expenses.append(expense)
         print("Expense added.")
 
-##    def add_expense(self):
-##        name = input("Enter name of expense: ")
-##        if any(e.name == name for e in self.expenses):
-##            print("Expense already exists.")
-##            return
-##        
-##        amount = get_validated_float("Amount", 0)
-##        payments = get_validated_int("Payments per year", 0)
-##        first_month = get_validated_int("First month", 0)
-##        naja = get_validated_int("Naja's share (%)", 0)
-##        david = get_validated_int("David's share (%)", 0)
-##
-##        expense = Expense(name, amount, payments, first_month, naja, david)
-##        self.expenses.append(expense)
-##        print("Expense added.")
-
     def delete_expense(self, name):
         for e in self.expenses:
             if e.name == name:
@@ -178,16 +161,31 @@ class Budget:
                 amount = get_validated_float("New amount", e.amount)
                 payments = get_validated_int("Payments per year", e.payments_per_year)
                 first_month = get_validated_int("First month", e.first_month)
-                naja = get_validated_int("Naja's share (%)", round(e.naja_share / e.total_per_year * 100))
-                david = get_validated_int("David's share (%)", round(e.david_share / e.total_per_year * 100))
+                
+                shares = {}
+                total = 0
+                print("Enter share percentages. Total must be 100%.")
+                
+                for person in self.people:
+                    while True:
+                        try:
+                            share = int(input(f"{person}'s share (%): "))
+                            break
+                        except ValueError:
+                            print("Invalid input. Enter a number.")
+                    shares[person] = share
+                    total += share
+
+                if total != 100:
+                    print(f"Error: Total share is {total}%. Must be 100%.")
+                    return
 
                 e.update(
                     name=new_name,
                     amount=amount,
                     payments_per_year=payments,
                     first_month=first_month,
-                    naja_share_pct=naja,
-                    david_share_pct=david
+                    shares = shares
                 )
 
 
