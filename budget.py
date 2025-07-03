@@ -30,6 +30,29 @@ def get_validated_int(prompt, current_value):
             return int(user_input)
         print("Invalid input. Please enter a whole number.")
 
+def save_to_pickle(budget):
+    current_file = "Expenses.pkl"
+    filename = input(f"Filename: [{current_file}]") or current_file
+    with open(filename, "wb") as f:
+        pickle.dump(budget, f)
+    print("Expenses saved.")
+
+def load_from_pickle():
+    current_file = "Expenses.pkl"
+    filename = input(f"Filename: [{current_file}]") or current_file
+    
+    try:
+        with open(filename, "rb") as f:
+            data = pickle.load(f)
+        print("Expenses loaded.")
+        return data
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        
+
+
 """# Expense class"""
 
 class Expense:
@@ -209,21 +232,7 @@ class Budget:
         df = pd.DataFrame(filtered)
         print(df.to_string(index=False))
 
-    def save_to_pickle(self, filename):
-        with open(filename, "wb") as f:
-            pickle.dump(self.expenses, f)
-        print("Expenses saved.")
-
-    def load_from_pickle(self, filename):
-        try:
-            with open(filename, "rb") as f:
-                data = pickle.load(f)
-            self.expenses = data
-            print("Expenses loaded.")
-        except FileNotFoundError:
-            print(f"Error: File '{filename}' not found.")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+    
 
 
 """# Main function"""
@@ -231,9 +240,19 @@ class Budget:
 import time
 
 def main():
-    budget = Budget()
-    current_file = "expenses.pkl"
-
+        
+    print("\n--- Menu ---")
+    print("1. New budget")
+    print("2. Load budget")
+    
+    choice = input("\nEnter your choice: ")
+    
+    # Handle user choice
+    if choice == '1':
+        budget = Budget()
+    elif choice == '2':
+        budget = load_from_pickle()
+    
     while True:
         # Display menu (don't clear yet — avoid input race)
         print("\n--- Menu ---")
@@ -269,12 +288,9 @@ def main():
             budget.show_expenses()
             budget.edit_expense()
         elif choice == '7':
-            saveto = input(f"Filename: [{current_file}]") or current_file
-            budget.save_to_pickle(saveto)
+            save_to_pickle(budget)
         elif choice == '8':
-            loadfrom = input(f"Filename: [{current_file}]") or current_file
-            current_file = loadfrom
-            budget.load_from_pickle(loadfrom)
+            budget = load_from_pickle()
         elif choice == '9':
             print("Exiting...")
             break
