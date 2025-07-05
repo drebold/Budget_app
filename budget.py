@@ -155,7 +155,9 @@ class Budget:
         self.expenses.append(expense)
         print("Expense added.")
 
-    def delete_expense(self, name):
+    def delete_expense(self):
+        self.show_expenses()
+        name = input("Name of expense: ")
         for e in self.expenses:
             if e.name == name:
                 self.expenses.remove(e)
@@ -280,10 +282,8 @@ def main():
             budget.show_expenses()
         elif choice == '4':
             budget.show_expenses_this_month()
-        elif choice == '5':
-            budget.show_expenses()
-            delete = input("Name of expense: ")
-            budget.delete_expense(delete)
+        elif choice == '5':            
+            budget.delete_expense()
         elif choice == '6':
             budget.show_expenses()
             budget.edit_expense()
