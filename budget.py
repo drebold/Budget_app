@@ -15,7 +15,11 @@ def get_validated_float(prompt, current_value):
     while True:
         user_input = input(f"{prompt} [{current_value}]: ")
         if user_input == "":
-            return current_value
+            if current_value == 0:
+                print("Value must be greater than zero")
+                continue
+            else:
+                return current_value
         try:
             return float(user_input.replace(',', '.'))
         except ValueError:
@@ -25,7 +29,11 @@ def get_validated_int(prompt, current_value):
     while True:
         user_input = input(f"{prompt} [{current_value}]: ")
         if user_input == "":
-            return current_value
+            if current_value == 0:
+                print("Value must be greater than zero")
+                continue
+            else:
+                return current_value
         if user_input.isdigit():
             return int(user_input)
         print("Invalid input. Please enter a whole number.")
@@ -127,6 +135,9 @@ class Budget:
         name = input("Enter name of expense: ")
         if any(e.name == name for e in self.expenses):
             print("Expense already exists.")
+            return
+        elif name == "":
+            print("Expense must have a name.")
             return
 
         amount = get_validated_float("Amount", 0)
