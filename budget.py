@@ -8,6 +8,8 @@ import time
 import os
 import pickle
 
+pd.set_option('display.precision', 2)
+
 def clear_console():
     os.system('cls')
 
@@ -70,7 +72,7 @@ class Expense:
         self.payments_per_year = payments_per_year
         self.first_month = first_month
         self.total_per_year = amount * payments_per_year
-        self.shares = shares  # e.g. {'Naja': 60, 'David': 40}
+        self.shares = shares  
         self.payment_months = self.calculate_payment_months()
 
     def calculate_payment_months(self):
@@ -112,10 +114,35 @@ class Expense:
 class Budget:
     def __init__(self):
         self.expenses = []
-        self.people = self.get_participants()  # e.g. ['Naja', 'David']
-
+        self.people = self.get_participants()  
+        self.monthly_balance = [0]*12
+        self.shares = {}
+        
+    def recalculate(self):
+        for person in self.people:
+            total = sum(e.shares[person] * e.total_per_year / 100 for e in self.expenses)
+            self.shares.update({person:{"total":total, "monthly":total / 12}})
+    
+        total_per_year = sum(e.total_per_year for e in self.expenses)
+        deposit_per_month = total_per_year / 12
+        
+        cumulative=[0]
+        net_changes = []
+        for i in range(1,13):
+            #print(deposit_per_month - sum(e.amount for e in self.expenses if i in e.payment_months))
+            net_changes.append(deposit_per_month - sum(e.amount for e in self.expenses if i in e.payment_months))
+            cumulative.append(cumulative[-1] + net_changes[i-1])
+            #print(net_changes[i-1])
+            #print(cumulative[i])
+            
+        for i in range(1,13):
+            self.monthly_balance[i-1] = cumulative[i] - min(cumulative)
+        
+        #print(self.monthly_balance)
+        
+    
     def get_participants(self):
-        print("Enter the names of the people sharing expenses (e.g. Naja, David). Leave blank to finish.")
+        print("Enter the names of the people sharing expenses. Leave blank to finish.")
         people = []
         while True:
             name = input("Enter name: ").strip()
@@ -126,8 +153,8 @@ class Budget:
                 continue
             people.append(name)
         if not people:
-            print("No names entered. Using default: ['Naja', 'David']")
-            return ['Naja', 'David']
+            print("No names entered. Using default: ['Joe', 'Jane']")
+            return ['Joe', 'Jane']
         clear_console()
         return people
 
@@ -164,6 +191,7 @@ class Budget:
 
         expense = Expense(name, amount, payments, first_month, shares)
         self.expenses.append(expense)
+        self.recalculate()
         print("Expense added.")
 
     def delete_expense(self):
@@ -172,6 +200,7 @@ class Budget:
         for e in self.expenses:
             if e.name == name:
                 self.expenses.remove(e)
+                self.recalculate()
                 print("Expense deleted.")
                 return
         print("Expense not found.")
@@ -207,7 +236,7 @@ class Budget:
                     first_month=first_month,
                     shares = shares
                 )
-
+                self.recalculate()
 
                 print("Expense updated.")
                 return
@@ -216,13 +245,8 @@ class Budget:
 
 
     def show_shares(self):
-        shares ={}
-        
-        for person in self.people:
-            total = sum(e.shares[person] * e.total_per_year / 100 for e in self.expenses)
-            shares.update({person:{"total":total, "monthly":total / 12}})
-            
-        df = pd.DataFrame(shares)
+    
+        df = pd.DataFrame(self.shares)
         print(df.to_string(index=True))
 
     def show_expenses(self):
@@ -242,8 +266,12 @@ class Budget:
         if not filtered:
             print("No expenses for this month.")
             return
+        total = sum(f["amount"] for f in filtered)
+        filtered.append({"name": "Total", "amount":total})
+        filtered.append({"name": "Balance", "amount":self.monthly_balance[current_month-1]})
         df = pd.DataFrame(filtered)
         print(df.to_string(index=False))
+        #print("%.2f" % self.monthly_balance[current_month-1])
 
     
 
@@ -263,8 +291,10 @@ def main():
     # Handle user choice
     if choice == '1':
         budget = Budget()
+        budget.recalculate()
     elif choice == '2':
         budget = load_from_pickle()
+        budget.recalculate()
     
     while True:
         # Display menu (don't clear yet — avoid input race)
@@ -302,6 +332,7 @@ def main():
             save_to_pickle(budget)
         elif choice == '8':
             budget = load_from_pickle()
+            budget.recalculate()
         elif choice == '9':
             print("Exiting...")
             break
