@@ -129,16 +129,11 @@ class Budget:
         cumulative=[0]
         net_changes = []
         for i in range(1,13):
-            #print(deposit_per_month - sum(e.amount for e in self.expenses if i in e.payment_months))
             net_changes.append(deposit_per_month - sum(e.amount for e in self.expenses if i in e.payment_months))
             cumulative.append(cumulative[-1] + net_changes[i-1])
-            #print(net_changes[i-1])
-            #print(cumulative[i])
             
         for i in range(1,13):
             self.monthly_balance[i-1] = cumulative[i] - min(cumulative)
-        
-        #print(self.monthly_balance)
         
     
     def get_participants(self):
@@ -271,7 +266,6 @@ class Budget:
         filtered.append({"name": "Balance", "amount":self.monthly_balance[current_month-1]})
         df = pd.DataFrame(filtered)
         print(df.to_string(index=False))
-        #print("%.2f" % self.monthly_balance[current_month-1])
 
     
 
